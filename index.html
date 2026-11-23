@@ -22,12 +22,17 @@
     .wheel-drop-shadow {
       filter: drop-shadow(0 0 35px rgba(14, 165, 233, 0.25)) drop-shadow(0 20px 40px rgba(0, 0, 0, 0.9));
     }
-    @keyframes pop-in {
-      from { opacity: 0; transform: translateY(16px) scale(0.96); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+    @keyframes pop-bounce {
+      0% { opacity: 0; transform: scale(0.85) translateY(12px); }
+      70% { opacity: 1; transform: scale(1.03) translateY(-3px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
     }
-    .animate-pop {
-      animation: pop-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    .animate-popup {
+      animation: pop-bounce 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .neon-pink-text {
+      color: #ff3388;
+      text-shadow: 0 0 15px rgba(255, 51, 136, 0.85), 0 0 30px rgba(255, 51, 136, 0.5);
     }
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -89,7 +94,7 @@
       </div>
 
       <!-- Minimum 2 Players Requirement Notice Banner -->
-      <div id="minPlayerNotice" class="hidden text-xs font-bold text-cyan-200 bg-sky-950/90 border border-cyan-400/60 rounded-xl px-3 py-2 flex items-center justify-between shadow-lg animate-pop">
+      <div id="minPlayerNotice" class="hidden text-xs font-bold text-cyan-200 bg-sky-950/90 border border-cyan-400/60 rounded-xl px-3 py-2 flex items-center justify-between shadow-lg">
         <div class="flex items-center gap-2 text-xs">
           <span class="text-base">⚠️</span>
           <span id="minPlayerNoticeText">Minimum 2 players required to spin!</span>
@@ -128,49 +133,75 @@
       </button>
     </div>
 
-    <!-- Action Button & Result Box Area -->
+    <!-- Spin Button -->
     <div class="w-full max-w-sm flex flex-col items-center gap-2.5">
       <button id="mainSpinBtn" class="w-full py-2.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-sm tracking-wider shadow-[0_0_25px_rgba(14,165,233,0.35)] active:scale-[0.98] transition flex items-center justify-center gap-2">
         <span>⚡ SPIN THE WHEEL</span>
       </button>
-
-      <!-- Result Card: COMPLETELY HIDDEN initially -->
-      <div id="resultModal" class="hidden w-full rounded-2xl p-3.5 bg-[#070e20]/95 border border-cyan-500/50 shadow-[0_0_30px_rgba(14,165,233,0.25)] backdrop-blur-xl animate-pop text-center">
-        
-        <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-sky-900/60 text-xs">
-          <span id="resultBadge" class="font-extrabold uppercase px-2.5 py-0.5 rounded-full tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-            🎯 SELECTED: ALEX
-          </span>
-          <button id="rerollPromptBtn" class="text-cyan-400 hover:text-cyan-200 font-semibold flex items-center gap-1 text-xs transition">
-            🔄 New Prompt
-          </button>
-        </div>
-
-        <!-- Choice buttons -->
-        <div id="choiceButtonsRow" class="flex gap-2 justify-center my-1.5">
-          <button id="pickTruthBtn" class="flex-1 py-1.5 px-3 rounded-xl bg-sky-950/80 hover:bg-sky-900/80 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition">
-            💬 Truth
-          </button>
-          <button id="pickDareBtn" class="flex-1 py-1.5 px-3 rounded-xl bg-blue-950/80 hover:bg-blue-900/80 border border-blue-500/40 text-blue-300 text-xs font-bold transition">
-            🔥 Dare
-          </button>
-          <button id="pickRandomBtn" class="py-1.5 px-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold transition">
-            🎲 Random
-          </button>
-        </div>
-
-        <p id="promptText" class="text-xs sm:text-sm font-medium py-2 px-2 text-sky-100 min-h-[38px] flex items-center justify-center leading-relaxed bg-[#030712] rounded-xl border border-sky-900/50">
-        </p>
-      </div>
     </div>
   </main>
 
-  <!-- Confetti Canvas (Floating Overlay) -->
+  <!-- POPUP MODAL (Matching User Screenshot: "It's your turn, [name]" -> "Awesome!") -->
+  <div id="turnModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="w-full max-w-[360px] bg-[#181d31] border border-slate-700/80 rounded-3xl p-7 text-center shadow-[0_0_50px_rgba(0,0,0,0.95)] animate-popup flex flex-col items-center">
+      
+      <p class="text-slate-300 text-base font-medium tracking-wide">It’s your turn,</p>
+      
+      <h2 id="turnPlayerName" class="text-3xl sm:text-4xl font-extrabold tracking-wide my-4 neon-pink-text break-all">
+        pewdiepie
+      </h2>
+      
+      <button id="awesomeBtn" class="px-9 py-3 rounded-2xl bg-[#4455bb] hover:bg-[#5266d6] active:scale-95 text-white font-bold text-sm tracking-wide shadow-[0_4px_20px_rgba(68,85,187,0.5)] transition">
+        Awesome!
+      </button>
+
+    </div>
+  </div>
+
+  <!-- TRUTH OR DARE CHALLENGE MODAL (Opened after clicking "Awesome!") -->
+  <div id="challengeModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="w-full max-w-[380px] bg-[#0c1426] border border-cyan-500/50 rounded-2xl p-5 text-center shadow-2xl animate-popup flex flex-col gap-3">
+      
+      <div class="flex items-center justify-between pb-1.5 border-b border-sky-900/60 text-xs">
+        <span id="challengeHeaderName" class="font-extrabold uppercase px-2.5 py-0.5 rounded-full text-xs tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+          🎯 PEWDIEPIE
+        </span>
+        <button id="closeChallengeBtn" class="text-sky-400 hover:text-white font-bold text-base">✕</button>
+      </div>
+
+      <p class="text-xs text-sky-200/90 font-medium">Choose your challenge:</p>
+
+      <div class="flex gap-2 justify-center my-1">
+        <button id="pickTruthBtn" class="flex-1 py-2 px-3 rounded-xl bg-sky-950/90 hover:bg-sky-900/90 border border-cyan-500/50 text-cyan-300 text-xs font-bold transition shadow">
+          💬 Truth
+        </button>
+        <button id="pickDareBtn" class="flex-1 py-2 px-3 rounded-xl bg-blue-950/90 hover:bg-blue-900/90 border border-blue-500/50 text-blue-300 text-xs font-bold transition shadow">
+          🔥 Dare
+        </button>
+      </div>
+
+      <p id="promptText" class="text-xs sm:text-sm font-medium py-3 px-2 text-sky-100 min-h-[50px] flex items-center justify-center leading-relaxed bg-[#030712] rounded-xl border border-sky-900/50">
+        Pick Truth or Dare to reveal your challenge!
+      </p>
+
+      <div class="flex justify-between items-center pt-1 border-t border-sky-950 text-xs">
+        <button id="rerollPromptBtn" class="text-cyan-400 hover:text-cyan-200 font-semibold flex items-center gap-1">
+          🔄 Another
+        </button>
+        <button id="doneChallengeBtn" class="px-5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold transition shadow">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Confetti Canvas -->
   <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
 
   <!-- Footer -->
   <footer class="w-full text-center py-2 text-xs text-sky-500/50 border-t border-sky-950/60 relative z-10 backdrop-blur-sm">
-    Truth or Dare Spinner Pro • Minimum 2 Players Required
+    Truth or Dare Spinner Pro • Obsidian Black & Electric Blue Edition
   </footer>
 
   <script>
@@ -255,10 +286,7 @@
       '#0284c7', '#0f172a', '#06b6d4', '#1e3a8a', '#0ea5e9', '#172554', '#38bdf8', '#1d4ed8'
     ];
 
-    // STARTS WITH ZERO PLAYERS (0)
-    const DEFAULT_PLAYERS = ['Alex', 'Sam', 'Jordan', 'Taylor'];
     let players = [];
-
     let mode = 'player_wheel';
     let wheelAngle = 0;
     let bottleAngle = 0;
@@ -393,7 +421,6 @@
       ctx.translate(cx, cy);
 
       if (mode === 'player_wheel' && players.length === 0) {
-        // 0 Players empty state
         const grad = ctx.createRadialGradient(0, 0, 40, 0, 0, radius);
         grad.addColorStop(0, '#09152e');
         grad.addColorStop(1, '#020617');
@@ -423,10 +450,8 @@
       }
 
       if (mode === 'player_wheel' && players.length === 1) {
-        // 1 Player: split wheel showing Player 1 and prompt for 2nd player
         ctx.rotate(wheelAngle);
 
-        // Player 1 half
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.arc(0, 0, radius, 0, Math.PI);
@@ -445,7 +470,6 @@
         ctx.fillText(players[0], radius - 40, 10);
         ctx.restore();
 
-        // Prompt for 2nd Player half
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.arc(0, 0, radius, Math.PI, 2 * Math.PI);
@@ -474,7 +498,6 @@
         return;
       }
 
-      // 2 or more players
       ctx.rotate(wheelAngle);
 
       const slices = getActiveSlices();
@@ -526,7 +549,7 @@
       }
 
       ctx.beginPath();
-      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.arc(0, 0, radius, 0, 2 * Math.PI);
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 8;
       ctx.stroke();
@@ -544,7 +567,6 @@
       return { slice: slices[idx], index: idx };
     }
 
-    // Checking minimum 2 players on spin!
     function triggerSpin() {
       if (isSpinning) return;
 
@@ -560,11 +582,11 @@
       }
 
       document.getElementById('minPlayerNotice').classList.add('hidden');
+      document.getElementById('turnModal').classList.add('hidden');
+      document.getElementById('challengeModal').classList.add('hidden');
+
       isSpinning = true;
       getAudioContext();
-
-      const resultModal = document.getElementById('resultModal');
-      resultModal.classList.add('hidden');
 
       const startAngle = mode === 'bottle' ? bottleAngle : wheelAngle;
       const extraRounds = (6 + Math.random() * 4) * Math.PI * 2;
@@ -604,71 +626,39 @@
       requestAnimationFrame(step);
     }
 
+    // SHOW POPUP MODAL (Matching Screenshot)
     function onSpinFinished() {
-      const modal = document.getElementById('resultModal');
-      const badge = document.getElementById('resultBadge');
-      const promptEl = document.getElementById('promptText');
-      const choiceButtonsRow = document.getElementById('choiceButtonsRow');
-
-      modal.classList.remove('hidden');
-
       if (mode === 'player_wheel') {
         const { slice } = getWheelSliceAtPointer(wheelAngle);
         selectedPlayerName = slice.label;
-
-        badge.className = 'font-black uppercase px-3 py-1 rounded-full text-xs tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
-        badge.innerText = `🎯 SELECTED: ${selectedPlayerName}`;
-        
-        choiceButtonsRow.classList.remove('hidden');
-        
-        const isDare = Math.random() > 0.5;
-        if (isDare) {
-          const dare = DARE_PROMPTS[Math.floor(Math.random() * DARE_PROMPTS.length)];
-          promptEl.innerHTML = `<span class="text-cyan-400 font-bold mr-1.5">[DARE]</span> ${dare}`;
-          playCelebration(true);
-        } else {
-          const truth = TRUTH_PROMPTS[Math.floor(Math.random() * TRUTH_PROMPTS.length)];
-          promptEl.innerHTML = `<span class="text-sky-300 font-bold mr-1.5">[TRUTH]</span> ${truth}`;
-          playCelebration(false);
-        }
       } else if (mode === 'bottle') {
         const count = players.length;
         const norm = (bottleAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
         const targetDir = (-Math.PI / 2 + norm + Math.PI * 2) % (Math.PI * 2);
         const playerIdx = Math.floor((targetDir / (Math.PI * 2)) * count) % count;
         selectedPlayerName = players[playerIdx];
-
-        badge.className = 'font-black uppercase px-3 py-1 rounded-full text-xs tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/40';
-        badge.innerText = `🍾 BOTTLE: ${selectedPlayerName}`;
-        
-        choiceButtonsRow.classList.remove('hidden');
-        const truth = TRUTH_PROMPTS[Math.floor(Math.random() * TRUTH_PROMPTS.length)];
-        promptEl.innerHTML = `<span class="text-sky-300 font-bold mr-1.5">[TRUTH]</span> ${truth}`;
-        playCelebration(false);
       } else {
         const { slice } = getWheelSliceAtPointer(wheelAngle);
-        choiceButtonsRow.classList.add('hidden');
-
-        if (slice.type === 'TRUTH') {
-          badge.className = 'font-black uppercase px-3 py-1 rounded-full text-xs tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
-          badge.innerText = '💬 TRUTH';
-          promptEl.innerText = TRUTH_PROMPTS[Math.floor(Math.random() * TRUTH_PROMPTS.length)];
-          playCelebration(false);
-        } else if (slice.type === 'DARE') {
-          badge.className = 'font-black uppercase px-3 py-1 rounded-full text-xs tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/40';
-          badge.innerText = '🔥 DARE';
-          promptEl.innerText = DARE_PROMPTS[Math.floor(Math.random() * DARE_PROMPTS.length)];
-          playCelebration(true);
-        } else {
-          badge.className = 'font-black uppercase px-3 py-1 rounded-full text-xs tracking-wider bg-sky-500/20 text-sky-300 border border-sky-500/40';
-          badge.innerText = '✨ WILDCARD';
-          promptEl.innerText = "DOUBLE DARE: Take two dares from the group or confess your biggest secret!";
-          playCelebration(true);
-        }
+        selectedPlayerName = slice.label;
       }
 
+      const turnModal = document.getElementById('turnModal');
+      document.getElementById('turnPlayerName').innerText = selectedPlayerName;
+      playCelebration(false);
+      turnModal.classList.remove('hidden');
       launchBlueConfetti();
     }
+
+    // Click "Awesome!" -> Opens Truth or Dare Challenge
+    document.getElementById('awesomeBtn').addEventListener('click', () => {
+      document.getElementById('turnModal').classList.add('hidden');
+      
+      const challengeModal = document.getElementById('challengeModal');
+      document.getElementById('challengeHeaderName').innerText = `🎯 ${selectedPlayerName.toUpperCase()}`;
+      document.getElementById('promptText').innerText = 'Pick Truth or Dare to reveal your challenge!';
+      
+      challengeModal.classList.remove('hidden');
+    });
 
     document.getElementById('pickTruthBtn').addEventListener('click', () => {
       const promptEl = document.getElementById('promptText');
@@ -682,20 +672,19 @@
       promptEl.innerHTML = `<span class="text-cyan-400 font-bold mr-1.5">[DARE]</span> ${d}`;
     });
 
-    document.getElementById('pickRandomBtn').addEventListener('click', () => {
-      const promptEl = document.getElementById('promptText');
-      const isDare = Math.random() > 0.5;
-      if (isDare) {
-        const d = DARE_PROMPTS[Math.floor(Math.random() * DARE_PROMPTS.length)];
-        promptEl.innerHTML = `<span class="text-cyan-400 font-bold mr-1.5">[DARE]</span> ${d}`;
+    document.getElementById('rerollPromptBtn').addEventListener('click', () => {
+      if (Math.random() > 0.5) {
+        document.getElementById('pickTruthBtn').click();
       } else {
-        const t = TRUTH_PROMPTS[Math.floor(Math.random() * TRUTH_PROMPTS.length)];
-        promptEl.innerHTML = `<span class="text-sky-300 font-bold mr-1.5">[TRUTH]</span> ${t}`;
+        document.getElementById('pickDareBtn').click();
       }
     });
 
-    document.getElementById('rerollPromptBtn').addEventListener('click', () => {
-      document.getElementById('pickRandomBtn').click();
+    document.getElementById('closeChallengeBtn').addEventListener('click', () => {
+      document.getElementById('challengeModal').classList.add('hidden');
+    });
+    document.getElementById('doneChallengeBtn').addEventListener('click', () => {
+      document.getElementById('challengeModal').classList.add('hidden');
     });
 
     // Confetti
@@ -711,7 +700,7 @@
     resizeConfetti();
 
     function launchBlueConfetti() {
-      const colors = ['#06b6d4', '#38bdf8', '#0284c7', '#2563eb', '#ffffff', '#7dd3fc'];
+      const colors = ['#06b6d4', '#38bdf8', '#0284c7', '#2563eb', '#ffffff', '#7dd3fc', '#ff3388'];
       confettiParticles = [];
       for (let i = 0; i < 55; i++) {
         confettiParticles.push({
@@ -756,7 +745,6 @@
       }
     }
 
-    // Player Chips Management (Minimum 2 players requirement checks)
     const playerChipsContainer = document.getElementById('playerChipsContainer');
     const quickPlayerInput = document.getElementById('quickPlayerInput');
     const playerBadgeCount = document.getElementById('playerBadgeCount');
@@ -876,7 +864,7 @@
     document.getElementById('centerSpin').addEventListener('click', triggerSpin);
     canvas.addEventListener('click', triggerSpin);
 
-    // Initial render: ZERO PLAYERS (0)
+    // Initial render
     renderPlayerChips();
     draw();
   </script>
