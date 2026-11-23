@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truth or Dare - Pro Spinner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes cyber-glow {
+      0%, 100% {
+        box-shadow: 0 0 20px rgba(14, 165, 233, 0.4), inset 0 0 15px rgba(56, 189, 248, 0.2);
+        border-color: rgba(56, 189, 248, 0.8);
+      }
+      50% {
+        box-shadow: 0 0 35px rgba(56, 189, 248, 0.7), inset 0 0 25px rgba(14, 165, 233, 0.4);
+        border-color: rgba(125, 211, 252, 1);
+      }
+    }
+    .neon-pulse {
+      animation: cyber-glow 2.5s infinite ease-in-out;
+    }
+    .wheel-drop-shadow {
+      filter: drop-shadow(0 0 35px rgba(14, 165, 233, 0.25)) drop-shadow(0 20px 40px rgba(0, 0, 0, 0.9));
+    }
+    @keyframes pop-in {
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-pop {
+      animation: pop-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.6); }
+  </style>
+</head>
+<body class="bg-[#020617] text-[#e0f2fe] min-h-screen flex flex-col justify-between items-center font-sans selection:bg-cyan-500 selection:text-black">
+
+  <!-- Background Ambience -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]"></div>
+    <div class="absolute top-1/2 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-[140px]"></div>
+    <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-sky-600/10 rounded-full blur-[130px]"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="w-full max-w-4xl px-4 py-3 flex items-center justify-between border-b border-sky-950/70 relative z-10 backdrop-blur-md">
+    <div class="flex items-center gap-2.5">
+      <div class="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_#22d3ee] animate-pulse"></div>
+      <h1 class="text-lg sm:text-xl font-black tracking-wider bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent">
+        SPINNER PRO <span class="text-xs font-semibold text-sky-400/70 border border-sky-800/60 rounded px-1.5 py-0.5 ml-1">BLACK & BLUE</span>
+      </h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="soundBtn" class="px-3 py-1.5 rounded-xl bg-[#091226] hover:bg-[#0f1d3d] text-sky-400 border border-sky-900/60 text-xs font-semibold transition flex items-center gap-1.5 shadow">
+        <span id="soundIcon">🔊</span> <span class="hidden sm:inline">Audio</span>
+      </button>
+      <button id="fullscreenBtn" class="px-2.5 py-1.5 rounded-xl bg-[#091226] hover:bg-[#0f1d3d] text-sky-400 border border-sky-900/60 text-xs font-semibold transition shadow" title="Toggle Fullscreen">
+        ⛶
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Game Stage -->
+  <main class="w-full max-w-2xl flex-1 flex flex-col items-center justify-center p-3 sm:p-4 gap-3.5 relative z-10">
+    
+    <!-- Mode Selector Navigation -->
+    <div class="inline-flex p-1 bg-[#050b18]/90 border border-sky-900/50 rounded-2xl shadow-xl text-xs sm:text-sm font-bold backdrop-blur-lg">
+      <button id="modePlayerWheelBtn" class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 text-white shadow-[0_0_15px_rgba(14,165,233,0.3)] transition">
+        👥 Player Wheel
+      </button>
+      <button id="modeTruthDareBtn" class="px-4 py-1.5 rounded-xl text-sky-400/80 hover:text-white transition">
+        🎯 Truth vs Dare
+      </button>
+      <button id="modeBottleBtn" class="px-4 py-1.5 rounded-xl text-sky-400/80 hover:text-white transition">
+        🍾 Spin the Bottle
+      </button>
+    </div>
+
+    <!-- Quick Player Management Row (Starts with ZERO players) -->
+    <div id="playerManagementBar" class="w-full max-w-md bg-[#070e20]/80 border border-sky-900/50 rounded-2xl p-2.5 flex flex-col gap-2 shadow-lg backdrop-blur-md">
+      <div class="flex items-center justify-between text-xs px-1">
+        <span class="font-bold text-sky-200 flex items-center gap-1.5">
+          <span>👥 Players on Wheel:</span>
+          <span id="playerBadgeCount" class="text-cyan-400 font-extrabold">(0)</span>
+        </span>
+        <button id="clearAllPlayersBtn" class="text-sky-400/70 hover:text-rose-400 font-medium transition hover:underline">Clear All</button>
+      </div>
+
+      <!-- Minimum 2 Players Requirement Notice Banner -->
+      <div id="minPlayerNotice" class="hidden text-xs font-bold text-cyan-200 bg-sky-950/90 border border-cyan-400/60 rounded-xl px-3 py-2 flex items-center justify-between shadow-lg animate-pop">
+        <div class="flex items-center gap-2 text-xs">
+          <span class="text-base">⚠️</span>
+          <span id="minPlayerNoticeText">Minimum 2 players required to spin!</span>
+        </div>
+        <button id="closeNoticeBtn" class="text-sky-400 hover:text-white font-bold text-sm ml-2">✕</button>
+      </div>
+
+      <!-- Add New Player Input -->
+      <div class="flex gap-2">
+        <input id="quickPlayerInput" type="text" placeholder="Type name & press Enter to add..." class="flex-1 px-3 py-1.5 bg-[#030712] border border-sky-800/70 rounded-xl text-xs sm:text-sm text-sky-100 placeholder-sky-600/50 focus:outline-none focus:border-cyan-400 transition" />
+        <button id="quickAddBtn" class="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-xs rounded-xl transition shadow">
+          + Add
+        </button>
+      </div>
+
+      <!-- Player Chips Tags (or empty message) -->
+      <div id="playerChipsContainer" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Spinner Stage with Perfect Ratio -->
+    <div class="relative flex items-center justify-center my-0.5 wheel-drop-shadow">
+      
+      <!-- Pointer Needle -->
+      <div id="pointerWrapper" class="absolute -top-3.5 z-20 flex flex-col items-center pointer-events-none filter drop-shadow(0 3px 8px rgba(34,211,238,0.9))">
+        <div id="pointerArrow" class="w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[26px] border-t-cyan-400 transition-transform duration-75"></div>
+      </div>
+
+      <!-- HiDPI Game Canvas (320px rendered at 640px) -->
+      <canvas id="gameCanvas" width="640" height="640" style="width:320px; height:320px;" class="rounded-full border-4 border-sky-950 cursor-pointer active:scale-[0.99] transition-transform"></canvas>
+
+      <!-- Center Spin Hub Button -->
+      <button id="centerSpin" class="absolute z-10 w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#020617] via-[#09152e] to-[#040918] text-cyan-300 font-black text-xs sm:text-sm tracking-widest shadow-2xl flex items-center justify-center border-2 border-cyan-400/80 neon-pulse cursor-pointer active:scale-90 transition-transform">
+        SPIN!
+      </button>
+    </div>
+
+    <!-- Action Button & Result Box Area -->
+    <div class="w-full max-w-sm flex flex-col items-center gap-2.5">
+      <button id="mainSpinBtn" class="w-full py-2.5 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-sm tracking-wider shadow-[0_0_25px_rgba(14,165,233,0.35)] active:scale-[0.98] transition flex items-center justify-center gap-2">
+        <span>⚡ SPIN THE WHEEL</span>
+      </button>
+
+      <!-- Result Card: COMPLETELY HIDDEN initially -->
+      <div id="resultModal" class="hidden w-full rounded-2xl p-3.5 bg-[#070e20]/95 border border-cyan-500/50 shadow-[0_0_30px_rgba(14,165,233,0.25)] backdrop-blur-xl animate-pop text-center">
+        
+        <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-sky-900/60 text-xs">
+          <span id="resultBadge" class="font-extrabold uppercase px-2.5 py-0.5 rounded-full tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+            🎯 SELECTED: ALEX
+          </span>
+          <button id="rerollPromptBtn" class="text-cyan-400 hover:text-cyan-200 font-semibold flex items-center gap-1 text-xs transition">
+            🔄 New Prompt
+          </button>
+        </div>
+
+        <!-- Choice buttons -->
+        <div id="choiceButtonsRow" class="flex gap-2 justify-center my-1.5">
+          <button id="pickTruthBtn" class="flex-1 py-1.5 px-3 rounded-xl bg-sky-950/80 hover:bg-sky-900/80 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition">
+            💬 Truth
+          </button>
+          <button id="pickDareBtn" class="flex-1 py-1.5 px-3 rounded-xl bg-blue-950/80 hover:bg-blue-900/80 border border-blue-500/40 text-blue-300 text-xs font-bold transition">
+            🔥 Dare
+          </button>
+          <button id="pickRandomBtn" class="py-1.5 px-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold transition">
+            🎲 Random
+          </button>
+        </div>
+
+        <p id="promptText" class="text-xs sm:text-sm font-medium py-2 px-2 text-sky-100 min-h-[38px] flex items-center justify-center leading-relaxed bg-[#030712] rounded-xl border border-sky-900/50">
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Confetti Canvas (Floating Overlay) -->
+  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+  <!-- Footer -->
+  <footer class="w-full text-center py-2 text-xs text-sky-500/50 border-t border-sky-950/60 relative z-10 backdrop-blur-sm">
+    Truth or Dare Spinner Pro • Minimum 2 Players Required
+  </footer>
+
+  <script>
+    let audioCtx = null;
+    let isMuted = false;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playTick() {
+      if (isMuted) return;
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(540 + Math.random() * 80, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.03);
+        gain.gain.setValueAtTime(0.14, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.03);
+      } catch (e) {}
+    }
+
+    function playCelebration(isDare) {
+      if (isMuted) return;
+      try {
+        const ctx = getAudioContext();
+        const freqs = isDare ? [440, 554, 659, 880] : [587, 740, 880, 1174];
+        freqs.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.08 + 0.32);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.08);
+          osc.stop(ctx.currentTime + idx * 0.08 + 0.35);
+        });
+      } catch (e) {}
+    }
+
+    const TRUTH_PROMPTS = [
+      "What is the most embarrassing thing in your recent search history?",
+      "Who was your first crush, and how did you act around them?",
+      "What is something you lied about that nobody in this room knows?",
+      "If you could trade lives with one person in this room for a week, who would it be?",
+      "What is your absolute biggest guilty pleasure song or television show?",
+      "What's the most childish thing you still secretly do?",
+      "Have you ever ghosted someone, and what was the honest reason?",
+      "What is the most ridiculous purchase you ever made with your own money?",
+      "What is your biggest fear or phobia that sounds completely irrational?",
+      "If you had to delete every social media app except one, which one survives?"
+    ];
+
+    const DARE_PROMPTS = [
+      "Do your best dramatic impression of a soap opera actor for 30 seconds.",
+      "Speak in rhyme for the next 2 full rounds of the game.",
+      "Send a funny selfie with a ridiculous goofy face to the 3rd contact in your phone.",
+      "Show everyone the last photo taken in your smartphone camera roll.",
+      "Do 12 squats while keeping completely serious eye contact with someone in the room.",
+      "Sing the chorus of your favorite song in an over-the-top opera voice.",
+      "Balance a spoon or small item on your nose for 20 seconds without dropping it.",
+      "Give the person to your left three ultra-specific, poetic compliments.",
+      "Talk in an exaggerated robot accent of your choice until your next turn.",
+      "Do a dramatic slow-motion catwalk across the room."
+    ];
+
+    const SECTOR_COLORS = [
+      '#0284c7', '#0f172a', '#06b6d4', '#1e3a8a', '#0ea5e9', '#172554', '#38bdf8', '#1d4ed8'
+    ];
+
+    // STARTS WITH ZERO PLAYERS (0)
+    const DEFAULT_PLAYERS = ['Alex', 'Sam', 'Jordan', 'Taylor'];
+    let players = [];
+
+    let mode = 'player_wheel';
+    let wheelAngle = 0;
+    let bottleAngle = 0;
+    let isSpinning = false;
+    let lastSliceIdx = -1;
+    let selectedPlayerName = "";
+
+    const classicTruthDareSlices = [
+      { type: 'TRUTH', label: 'TRUTH', color: '#0284c7' },
+      { type: 'DARE', label: 'DARE', color: '#0f172a' },
+      { type: 'TRUTH', label: 'TRUTH', color: '#06b6d4' },
+      { type: 'DARE', label: 'DARE', color: '#1e3a8a' },
+      { type: 'TRUTH', label: 'TRUTH', color: '#0ea5e9' },
+      { type: 'DARE', label: 'DARE', color: '#172554' },
+      { type: 'WILD', label: 'WILD ⚡', color: '#38bdf8' },
+      { type: 'TRUTH', label: 'TRUTH', color: '#1d4ed8' }
+    ];
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const pointerArrow = document.getElementById('pointerArrow');
+    const pointerWrapper = document.getElementById('pointerWrapper');
+
+    function showNotice(msg) {
+      const notice = document.getElementById('minPlayerNotice');
+      const text = document.getElementById('minPlayerNoticeText');
+      text.innerText = msg;
+      notice.classList.remove('hidden');
+
+      const inp = document.getElementById('quickPlayerInput');
+      inp.focus();
+      inp.classList.add('ring-2', 'ring-cyan-400');
+      setTimeout(() => inp.classList.remove('ring-2', 'ring-cyan-400'), 1200);
+    }
+
+    document.getElementById('closeNoticeBtn').addEventListener('click', () => {
+      document.getElementById('minPlayerNotice').classList.add('hidden');
+    });
+
+    function getActiveSlices() {
+      if (mode === 'truth_dare') {
+        return classicTruthDareSlices;
+      }
+      return players.map((name, i) => ({
+        type: 'PLAYER',
+        label: name,
+        color: SECTOR_COLORS[i % SECTOR_COLORS.length]
+      }));
+    }
+
+    function draw() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const radius = w / 2 - 16;
+
+      ctx.clearRect(0, 0, w, h);
+
+      if (mode === 'bottle') {
+        pointerWrapper.classList.add('hidden');
+        ctx.save();
+        ctx.translate(cx, cy);
+
+        const grad = ctx.createRadialGradient(0, 0, 40, 0, 0, radius);
+        grad.addColorStop(0, '#09152e');
+        grad.addColorStop(1, '#020617');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        const count = players.length;
+        if (count === 0) {
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('No players added yet', 0, 80);
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '20px sans-serif';
+          ctx.fillText('Minimum 2 players needed', 0, 120);
+        } else {
+          for (let i = 0; i < count; i++) {
+            const angle = (i * 2 * Math.PI) / count;
+            const px = Math.cos(angle) * (radius - 55);
+            const py = Math.sin(angle) * (radius - 55);
+
+            ctx.beginPath();
+            ctx.arc(px, py, 32, 0, Math.PI * 2);
+            ctx.fillStyle = SECTOR_COLORS[i % SECTOR_COLORS.length];
+            ctx.fill();
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const name = players[i].length > 6 ? players[i].substring(0, 5) + '..' : players[i];
+            ctx.fillText(name, px, py);
+          }
+        }
+
+        ctx.rotate(bottleAngle);
+        ctx.fillStyle = '#06b6d4';
+        ctx.beginPath();
+        ctx.roundRect(-16, -210, 32, 100, [10, 10, 0, 0]);
+        ctx.roundRect(-46, -110, 92, 200, [35, 35, 25, 25]);
+        ctx.fill();
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        ctx.fillStyle = '#030712';
+        ctx.fillRect(-35, -55, 70, 90);
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '900 20px sans-serif';
+        ctx.fillText('SPIN', 0, -5);
+
+        ctx.restore();
+        return;
+      }
+
+      // Wheel Mode
+      pointerWrapper.classList.remove('hidden');
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      if (mode === 'player_wheel' && players.length === 0) {
+        // 0 Players empty state
+        const grad = ctx.createRadialGradient(0, 0, 40, 0, 0, radius);
+        grad.addColorStop(0, '#09152e');
+        grad.addColorStop(1, '#020617');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 6;
+        ctx.setLineDash([12, 8]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 30px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('+ Add Players', 0, -15);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('(Min 2 players needed)', 0, 25);
+
+        ctx.restore();
+        return;
+      }
+
+      if (mode === 'player_wheel' && players.length === 1) {
+        // 1 Player: split wheel showing Player 1 and prompt for 2nd player
+        ctx.rotate(wheelAngle);
+
+        // Player 1 half
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius, 0, Math.PI);
+        ctx.closePath();
+        ctx.fillStyle = '#0284c7';
+        ctx.fill();
+        ctx.strokeStyle = '#020617';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.rotate(Math.PI / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 30px sans-serif';
+        ctx.fillText(players[0], radius - 40, 10);
+        ctx.restore();
+
+        // Prompt for 2nd Player half
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius, Math.PI, 2 * Math.PI);
+        ctx.closePath();
+        ctx.fillStyle = '#09152e';
+        ctx.fill();
+        ctx.strokeStyle = '#020617';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.rotate(1.5 * Math.PI);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('+ Add 2nd Player', radius - 35, 8);
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 8;
+        ctx.stroke();
+
+        ctx.restore();
+        return;
+      }
+
+      // 2 or more players
+      ctx.rotate(wheelAngle);
+
+      const slices = getActiveSlices();
+      const numSlices = slices.length;
+      const arc = (Math.PI * 2) / numSlices;
+
+      for (let i = 0; i < numSlices; i++) {
+        const slice = slices[i];
+        const angle = i * arc;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius, angle, angle + arc);
+        ctx.closePath();
+        ctx.fillStyle = slice.color;
+        ctx.fill();
+
+        ctx.strokeStyle = '#020617';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        const midAngle = angle + arc / 2;
+        const pegX = Math.cos(midAngle) * (radius - 16);
+        const pegY = Math.sin(midAngle) * (radius - 16);
+        ctx.beginPath();
+        ctx.arc(pegX, pegY, 7, 0, Math.PI * 2);
+        ctx.fillStyle = '#38bdf8';
+        ctx.shadowColor = '#06b6d4';
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.save();
+        ctx.rotate(midAngle);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffffff';
+
+        const fontSize = numSlices > 10 ? 22 : (numSlices > 6 ? 26 : 32);
+        ctx.font = `900 ${fontSize}px sans-serif`;
+        ctx.shadowColor = 'rgba(0,0,0,0.9)';
+        ctx.shadowBlur = 8;
+
+        let displayLabel = slice.label;
+        if (displayLabel.length > 10 && numSlices > 8) {
+          displayLabel = displayLabel.substring(0, 8) + '..';
+        }
+        ctx.fillText(displayLabel, radius - 40, fontSize / 3.2);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function getWheelSliceAtPointer(angle) {
+      const slices = getActiveSlices();
+      const numSlices = slices.length;
+      const arc = (Math.PI * 2) / numSlices;
+      const normalized = (angle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      const pointerAngle = (1.5 * Math.PI - normalized + Math.PI * 2) % (Math.PI * 2);
+      const idx = Math.floor(pointerAngle / arc) % numSlices;
+      return { slice: slices[idx], index: idx };
+    }
+
+    // Checking minimum 2 players on spin!
+    function triggerSpin() {
+      if (isSpinning) return;
+
+      if (mode === 'player_wheel' || mode === 'bottle') {
+        if (players.length === 0) {
+          showNotice('Please add at least 2 players to spin!');
+          return;
+        }
+        if (players.length === 1) {
+          showNotice('Minimum 2 players required to spin! Please add 1 more player.');
+          return;
+        }
+      }
+
+      document.getElementById('minPlayerNotice').classList.add('hidden');
+      isSpinning = true;
+      getAudioContext();
+
+      const resultModal = document.getElementById('resultModal');
+      resultModal.classList.add('hidden');
+
+      const startAngle = mode === 'bottle' ? bottleAngle : wheelAngle;
+      const extraRounds = (6 + Math.random() * 4) * Math.PI * 2;
+      const targetAngle = startAngle + extraRounds + Math.random() * Math.PI * 2;
+      const duration = 3800 + Math.random() * 400;
+      const startTime = performance.now();
+
+      function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 5);
+        const curr = startAngle + (targetAngle - startAngle) * ease;
+
+        if (mode === 'bottle') {
+          bottleAngle = curr;
+        } else {
+          wheelAngle = curr;
+          const { index } = getWheelSliceAtPointer(wheelAngle);
+          if (index !== lastSliceIdx) {
+            lastSliceIdx = index;
+            playTick();
+            pointerArrow.style.transform = 'scale(1.25) rotate(-16deg)';
+            setTimeout(() => { pointerArrow.style.transform = 'scale(1) rotate(0deg)'; }, 60);
+          }
+        }
+
+        draw();
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          isSpinning = false;
+          onSpinFinished();
+        }
+      }
+
+      requestAnimationFrame(step);
+    }
+
+    function onSpinFinished() {
+      const modal = document.getElementById('resultModal');
+      const badge = document.getElementById('resultBadge');
+      const promptEl = document.getElementById('promptText');
+      const choiceButtonsRow = document.getElementById('choiceButtonsRow');
+
+      modal.classList.remove('hidden');
+
+      if (mode === 'player_wheel') {
+        const { slice } = getWheelSliceAtPointer(wheelAngle);
+        selectedPlayerName = slice.label;
+
+        badge.className = 'font-black uppercase px-3 py-1 rounded-full text-xs tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+        badge.innerText = `🎯 SELECTED: ${selectedPlayerName}`;
+        
+        choiceButtonsRow.classList.remove('hidden');
+        
+        const isDare = Math.random() > 0.5;
+        if (isDare) {
+          const dare = DARE_PROMPTS[Math.floor(Math.random() * DARE_PROMPTS.length)];
+          promptEl.innerHTML = `<span class="text-cyan-400 font-bold mr-1.5">[DARE]</span> ${dare}`;
+          playCelebration(true);
+        } else {
+          const truth = TRUTH_PROMPTS[Math.floor(Math.random() * TRUTH_PROMPTS.length)];
+          promptEl.innerHTML = `<span class="text-sky-300 font-bold mr-1.5">[TRUTH]</span> ${truth}`;
+          playCelebration(false);
+        }
+      } else if (mode === 'bottle') {
+        const count = players.length;
+        const norm = (bottleAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        const targetDir = (-Math.PI / 2 + norm + Math.PI * 2) % (Math.PI * 2);
+        const playerIdx = Math.floor((targetDir / (Math.PI * 2)) * count) % count;
+        selectedPlayerName = players[playerIdx];
+
+        badge.className = 'font-black uppercase px-3 py-1 rounded-full text-xs tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/40';
+        badge.innerText = `🍾 BOTTLE: ${selectedPlayerName}`;
+        
+        choiceButtonsRow.classList.remove('hidden');
+        const truth = TRUTH_PROMPTS[Math.floor(Math.random() * TRUTH_PROMPTS.length)];
+        promptEl.innerHTML = `<span class="text-sky-300 font-bold mr-1.5">[TRUTH]</span> ${truth}`;
+        playCelebration(false);
+      } else {
+        const { slice } = getWheelSliceAtPointer(wheelAngle);
+        choiceButtonsRow.classList.add('hidden');
+
+        if (slice.type === 'TRUTH') {
+          badge.className = 'font-black uppercase px-3 py-1 rounded-full text-xs tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+          badge.innerText = '💬 TRUTH';
+          promptEl.innerText = TRUTH_PROMPTS[Math.floor(Math.random() * TRUTH_PROMPTS.length)];
+          playCelebration(false);
+        } else if (slice.type === 'DARE') {
+          badge.className = 'font-black uppercase px-3 py-1 rounded-full text-xs tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/40';
+          badge.innerText = '🔥 DARE';
+          promptEl.innerText = DARE_PROMPTS[Math.floor(Math.random() * DARE_PROMPTS.length)];
+          playCelebration(true);
+        } else {
+          badge.className = 'font-black uppercase px-3 py-1 rounded-full text-xs tracking-wider bg-sky-500/20 text-sky-300 border border-sky-500/40';
+          badge.innerText = '✨ WILDCARD';
+          promptEl.innerText = "DOUBLE DARE: Take two dares from the group or confess your biggest secret!";
+          playCelebration(true);
+        }
+      }
+
+      launchBlueConfetti();
+    }
+
+    document.getElementById('pickTruthBtn').addEventListener('click', () => {
+      const promptEl = document.getElementById('promptText');
+      const t = TRUTH_PROMPTS[Math.floor(Math.random() * TRUTH_PROMPTS.length)];
+      promptEl.innerHTML = `<span class="text-sky-300 font-bold mr-1.5">[TRUTH]</span> ${t}`;
+    });
+
+    document.getElementById('pickDareBtn').addEventListener('click', () => {
+      const promptEl = document.getElementById('promptText');
+      const d = DARE_PROMPTS[Math.floor(Math.random() * DARE_PROMPTS.length)];
+      promptEl.innerHTML = `<span class="text-cyan-400 font-bold mr-1.5">[DARE]</span> ${d}`;
+    });
+
+    document.getElementById('pickRandomBtn').addEventListener('click', () => {
+      const promptEl = document.getElementById('promptText');
+      const isDare = Math.random() > 0.5;
+      if (isDare) {
+        const d = DARE_PROMPTS[Math.floor(Math.random() * DARE_PROMPTS.length)];
+        promptEl.innerHTML = `<span class="text-cyan-400 font-bold mr-1.5">[DARE]</span> ${d}`;
+      } else {
+        const t = TRUTH_PROMPTS[Math.floor(Math.random() * TRUTH_PROMPTS.length)];
+        promptEl.innerHTML = `<span class="text-sky-300 font-bold mr-1.5">[TRUTH]</span> ${t}`;
+      }
+    });
+
+    document.getElementById('rerollPromptBtn').addEventListener('click', () => {
+      document.getElementById('pickRandomBtn').click();
+    });
+
+    // Confetti
+    const confettiCvs = document.getElementById('confettiCanvas');
+    const confettiCtx = confettiCvs.getContext('2d');
+    let confettiParticles = [];
+
+    function resizeConfetti() {
+      confettiCvs.width = window.innerWidth;
+      confettiCvs.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeConfetti);
+    resizeConfetti();
+
+    function launchBlueConfetti() {
+      const colors = ['#06b6d4', '#38bdf8', '#0284c7', '#2563eb', '#ffffff', '#7dd3fc'];
+      confettiParticles = [];
+      for (let i = 0; i < 55; i++) {
+        confettiParticles.push({
+          x: confettiCvs.width / 2 + (Math.random() - 0.5) * 80,
+          y: confettiCvs.height / 2 - 40,
+          vx: (Math.random() - 0.5) * 11,
+          vy: -Math.random() * 9 - 4,
+          size: Math.random() * 6 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 10,
+          alpha: 1
+        });
+      }
+      renderConfetti();
+    }
+
+    function renderConfetti() {
+      confettiCtx.clearRect(0, 0, confettiCvs.width, confettiCvs.height);
+      let alive = false;
+      confettiParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.25;
+        p.rotation += p.rotSpeed;
+        p.alpha -= 0.012;
+        if (p.alpha > 0) {
+          alive = true;
+          confettiCtx.save();
+          confettiCtx.globalAlpha = p.alpha;
+          confettiCtx.translate(p.x, p.y);
+          confettiCtx.rotate((p.rotation * Math.PI) / 180);
+          confettiCtx.fillStyle = p.color;
+          confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          confettiCtx.restore();
+        }
+      });
+      if (alive) {
+        requestAnimationFrame(renderConfetti);
+      } else {
+        confettiCtx.clearRect(0, 0, confettiCvs.width, confettiCvs.height);
+      }
+    }
+
+    // Player Chips Management (Minimum 2 players requirement checks)
+    const playerChipsContainer = document.getElementById('playerChipsContainer');
+    const quickPlayerInput = document.getElementById('quickPlayerInput');
+    const playerBadgeCount = document.getElementById('playerBadgeCount');
+
+    function renderPlayerChips() {
+      playerChipsContainer.innerHTML = '';
+      playerBadgeCount.innerText = `(${players.length})`;
+
+      if (players.length >= 2) {
+        document.getElementById('minPlayerNotice').classList.add('hidden');
+      }
+
+      if (players.length === 0) {
+        const emptySpan = document.createElement('span');
+        emptySpan.className = 'text-xs text-sky-500/70 italic py-1';
+        emptySpan.innerText = 'Wheel is empty! Add player names above.';
+        playerChipsContainer.appendChild(emptySpan);
+        draw();
+        return;
+      }
+
+      players.forEach((p, idx) => {
+        const chip = document.createElement('div');
+        chip.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-[#030712] border border-sky-800/80 text-sky-100 shadow-sm';
+        chip.innerHTML = `
+          <span class="w-2 h-2 rounded-full" style="background:${SECTOR_COLORS[idx % SECTOR_COLORS.length]}"></span>
+          <span>${p}</span>
+          <button data-idx="${idx}" class="remove-chip-btn text-sky-500 hover:text-cyan-300 font-bold ml-1 transition" title="Remove ${p}">✕</button>
+        `;
+        playerChipsContainer.appendChild(chip);
+      });
+
+      document.querySelectorAll('.remove-chip-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
+          players.splice(idx, 1);
+          renderPlayerChips();
+          draw();
+        });
+      });
+
+      draw();
+    }
+
+    function addPlayerFromInput() {
+      const val = quickPlayerInput.value.trim();
+      if (val) {
+        players.push(val);
+        quickPlayerInput.value = '';
+        renderPlayerChips();
+      }
+      quickPlayerInput.focus();
+    }
+
+    document.getElementById('quickAddBtn').addEventListener('click', addPlayerFromInput);
+    quickPlayerInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addPlayerFromInput();
+      }
+    });
+
+    document.getElementById('clearAllPlayersBtn').addEventListener('click', () => {
+      players = [];
+      renderPlayerChips();
+    });
+
+    // Modes
+    const modePlayerWheelBtn = document.getElementById('modePlayerWheelBtn');
+    const modeTruthDareBtn = document.getElementById('modeTruthDareBtn');
+    const modeBottleBtn = document.getElementById('modeBottleBtn');
+    const playerManagementBar = document.getElementById('playerManagementBar');
+
+    function setActiveMode(newMode) {
+      if (isSpinning) return;
+      mode = newMode;
+
+      [modePlayerWheelBtn, modeTruthDareBtn, modeBottleBtn].forEach(b => {
+        b.className = 'px-4 py-1.5 rounded-xl text-sky-400/80 hover:text-white transition';
+      });
+
+      if (mode === 'player_wheel') {
+        modePlayerWheelBtn.className = 'px-4 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 text-white shadow-[0_0_15px_rgba(14,165,233,0.3)] transition';
+        playerManagementBar.classList.remove('hidden');
+      } else if (mode === 'truth_dare') {
+        modeTruthDareBtn.className = 'px-4 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 text-white shadow-[0_0_15px_rgba(14,165,233,0.3)] transition';
+        playerManagementBar.classList.add('hidden');
+      } else if (mode === 'bottle') {
+        modeBottleBtn.className = 'px-4 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 text-white shadow-[0_0_15px_rgba(14,165,233,0.3)] transition';
+        playerManagementBar.classList.remove('hidden');
+      }
+
+      draw();
+    }
+
+    modePlayerWheelBtn.addEventListener('click', () => setActiveMode('player_wheel'));
+    modeTruthDareBtn.addEventListener('click', () => setActiveMode('truth_dare'));
+    modeBottleBtn.addEventListener('click', () => setActiveMode('bottle'));
+
+    // Sound toggle
+    document.getElementById('soundBtn').addEventListener('click', () => {
+      isMuted = !isMuted;
+      document.getElementById('soundIcon').innerText = isMuted ? '🔇' : '🔊';
+    });
+
+    // Fullscreen toggle
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // Spin triggers
+    document.getElementById('mainSpinBtn').addEventListener('click', triggerSpin);
+    document.getElementById('centerSpin').addEventListener('click', triggerSpin);
+    canvas.addEventListener('click', triggerSpin);
+
+    // Initial render: ZERO PLAYERS (0)
+    renderPlayerChips();
+    draw();
+  </script>
+</body>
+</html>
